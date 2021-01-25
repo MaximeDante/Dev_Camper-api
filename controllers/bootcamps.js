@@ -8,79 +8,9 @@ const BootCamp = require("../models/Bootcamp");
 // @route        GET /api/v1/bootcamps
 // @access       PUBLIC
 exports.getBootCamps = asyncHandler(async (req, res, next) => {
-	let query;
-
-	// Copy req.query
-	const reqQuery = { ...req.query };
-
-	// fields to exclude
-	const removeFields = ["select", "sort", "page", 'limit'];
-
-	// Loop over remoceFields and delete them from reqQuery
-	removeFields.forEach((param) => delete reqQuery[param]);
-
-	// Buiding a query parameters string
-	let queryStr = JSON.stringify(reqQuery);
-
-	// Create  operators like ($gt, $gte, etc)
-	queryStr = queryStr.replace(
-		/\b(gt|gte|lt|lte|in)\b/g,
-		(match) => `$${match}`
-	);
-
-	// convert back json to object
-    query = JSON.parse(queryStr);
-    
-    let databaseQuery;
-    
-	// Finding  a resource and executing the query
-	databaseQuery = BootCamp.find(query).sort("-createdAt").populate('courses');
-	
-	// select fields
-	if (req.query.select) {
-		const fields = req.query.select.split(",").join(" ");
-		databaseQuery = databaseQuery.select(fields);
-    }
-  
-    // Sort
-	if (req.query.sort) {
-		const sortBy = req.query.sort.split(",").join(" ");
-		databaseQuery = databaseQuery.sort(sortBy);
-    }
-
-     // pagination
-     const page = parseInt(req.query.page, 10) || 1;
-     const limit = parseInt(req.query.limit, 10) || 25;
-     const  startIndex = (page - 1)* limit;
-     const endIndex = page * limit;
-     const total = await BootCamp.countDocuments();
- 
-     databaseQuery = databaseQuery.skip(startIndex).limit(limit);
- 
-     // executing the query
-    const bootcamps = await databaseQuery;
-
-    // pagination result
-    const pagination = {};
- 
-    if(endIndex < total){
-        pagination.next ={
-            page: page + 1,
-            limit
-        }
-    }
-
-    if (startIndex > 0){
-        pagination.prev ={
-            page: page -1,
-            limit
-        }
-    }
-
-
 	res
 		.status(200)
-		.json({ success: true, count: bootcamps.length, pagination, data: bootcamps });
+		.json(res.advancedResults);
 });
 
 // @description  GET single bootcamp
