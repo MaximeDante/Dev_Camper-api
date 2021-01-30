@@ -6,6 +6,11 @@ const colors = require("colors");
 const fileupload = require('express-fileupload');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
+const xss = require('xss-clean');
+const expressRateLimit = require('express-rate-limit');
+const hpp = require('hpp');
+const cors = require('cors');
 const errorHandler = require('./middleware/error')
 const connectDB = require('./config/db');
 
@@ -41,9 +46,33 @@ if (process.env.NODE_ENV === "development") {
 app.use(fileupload());
 
 
-// Sanitize data (Avoid noSQL injection)
+// =====> Security middleware (packages)
 
+// Sanitize data (prevent noSQL injection)
 app.use(mongoSanitize());
+
+// Set security headers
+app.use(helmet());
+
+//  prevent XSS attacts
+app.use(xss());
+
+// Rate limiting
+const limiter = expressRateLimit({
+    windowMs: 10 * 60 * 1000, // 10 mins
+    max: 100
+}) 
+app.use(limiter);
+
+
+// prevent http params pollution
+app.use(hpp());
+
+
+// Enable CORS (PUBLIC API)
+app.use(cors());
+
+// =====> Security middleware (packages)
 
 
 // Set static folder
