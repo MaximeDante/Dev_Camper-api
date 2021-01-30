@@ -1,4 +1,3 @@
-// Used for authentication only
 const express = require("express");
 const { deleteCourse } = require("../controllers/Courses");
 const {
